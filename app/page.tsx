@@ -1,25 +1,82 @@
-export default function Page() {
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '../../lib/supabaseClient';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // 新規登録
+  async function handleSignUp() {
+    setLoading(true);
+    setMessage('');
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      setMessage('登録エラー: ' + error.message);
+    } else {
+      setMessage('確認メールを送信しました。メールのリンクを開いてください。');
+    }
+    setLoading(false);
+  }
+
+  // ログイン → 成功したらトップページへ移動
+  async function handleSignIn() {
+    setLoading(true);
+    setMessage('');
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      setMessage('ログインエラー: ' + error.message);
+      setLoading(false);
+    } else {
+      setMessage('ログイン成功しました！移動します...');
+      router.push('/');
+    }
+  }
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 p-6 text-center">
-      <div className="rounded-2xl bg-white px-6 py-8 shadow-md">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Threads AI Auto Poster
-        </h1>
-        <p className="mt-2 text-sm text-gray-600">
-          AIでThreadsの投稿文を生成・予約・自動投稿するツール
+    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-4 p-6">
+      <h1 className="text-center text-2xl font-bold text-gray-900">ログイン</h1>
+
+      <input
+        type="email"
+        placeholder="メールアドレス"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className="rounded-lg border border-gray-300 px-4 py-3 text-base"
+      />
+      <input
+        type="password"
+        placeholder="パスワード（6文字以上）"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className="rounded-lg border border-gray-300 px-4 py-3 text-base"
+      />
+
+      <button
+        onClick={handleSignIn}
+        disabled={loading}
+        className="rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white disabled:opacity-50"
+      >
+        ログイン
+      </button>
+      <button
+        onClick={handleSignUp}
+        disabled={loading}
+        className="rounded-lg border border-blue-600 px-4 py-3 font-semibold text-blue-600 disabled:opacity-50"
+      >
+        新規登録
+      </button>
+
+      {message && (
+        <p className="rounded-lg bg-gray-100 px-4 py-3 text-center text-sm text-gray-700">
+          {message}
         </p>
-        <div className="mt-6 rounded-lg bg-gray-100 px-4 py-3 text-left text-xs text-gray-500">
-          <p className="font-semibold text-gray-700">開発の進み具合</p>
-          <ul className="mt-2 space-y-1">
-            <li>✅ 開発環境（StackBlitz）</li>
-            <li>✅ GitHub連携</li>
-            <li>🔜 ログイン機能（第3段階）</li>
-            <li>🔜 AI文章生成（第6段階）</li>
-            <li>🔜 Threads連携・投稿（第8段階〜）</li>
-          </ul>
-        </div>
-      </div>
-      <p className="text-xs text-gray-400">この画面が出れば、書き換え成功です 🎉</p>
+      )}
     </main>
   );
 }
