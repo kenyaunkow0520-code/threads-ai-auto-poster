@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { supabase } from '../lib/supabaseClient';
 
 export default function LoginPage() {
@@ -8,8 +9,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
 
-  // 新規登録
   async function handleSignUp() {
     setLoading(true);
     setMessage('');
@@ -22,19 +23,17 @@ export default function LoginPage() {
     setLoading(false);
   }
 
-  // ログイン → 成功したらトップページへ移動
   async function handleSignIn() {
     setLoading(true);
     setMessage('');
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setMessage('ログインエラー: ' + error.message);
-      setLoading(false);
     } else {
-      setMessage('ログイン成功しました！移動します...');
-      // 確実にトップページへ移動する
-      window.location.href = '/';
+      setMessage('ログインに成功しました！');
+      setLoggedIn(true);
     }
+    setLoading(false);
   }
 
   return (
@@ -75,6 +74,15 @@ export default function LoginPage() {
         <p className="rounded-lg bg-gray-100 px-4 py-3 text-center text-sm text-gray-700">
           {message}
         </p>
+      )}
+
+      {loggedIn && (
+        <Link
+          href="/"
+          className="rounded-lg bg-green-600 px-4 py-3 text-center font-semibold text-white"
+        >
+          トップページへ進む →
+        </Link>
       )}
     </main>
   );
