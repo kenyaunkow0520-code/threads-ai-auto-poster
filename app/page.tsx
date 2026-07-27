@@ -43,4 +43,30 @@ export default function Page() {
         {!loading &&
           (email ? (
             <button
-              onClick={
+              onClick={handleLogout}
+              className="mt-4 w-full rounded-lg border border-red-500 px-4 py-3 font-semibold text-red-500"
+            >
+              ログアウト
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              className="mt-4 block w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white"
+            >
+              ログインする
+            </Link>
+          ))}
+      </div>
+
+      <div className="w-full rounded-lg bg-white/80 px-4 py-3 text-left text-xs text-gray-500 shadow">
+        <p className="font-semibold text-gray-700">開発の進み具合</p>
+        <ul className="mt-2 space-y-1">
+          <li>✅ 開発環境・GitHub・公開</li>
+          <li>✅ ログイン機能</li>
+          <li>🔜 AI文章生成（第6段階）</li>
+          <li>🔜 Threads連携・投稿（第8段階〜）</li>
+        </ul>
+      </div>
+    </main>
+  );
+}
