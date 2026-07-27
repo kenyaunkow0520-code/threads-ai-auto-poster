@@ -1,89 +1,46 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../lib/supabaseClient';
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
+export default function Page() {
+  const [email, setEmail] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  async function handleSignUp() {
-    setLoading(true);
-    setMessage('');
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) {
-      setMessage('登録エラー: ' + error.message);
-    } else {
-      setMessage('確認メールを送信しました。メールのリンクを開いてください。');
-    }
-    setLoading(false);
-  }
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setEmail(data.user?.email ?? null);
+      setLoading(false);
+    });
+  }, []);
 
-  async function handleSignIn() {
-    setLoading(true);
-    setMessage('');
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setMessage('ログインエラー: ' + error.message);
-    } else {
-      setMessage('ログインに成功しました！');
-      setLoggedIn(true);
-    }
-    setLoading(false);
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    setEmail(null);
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-4 p-6">
-      <h1 className="text-center text-2xl font-bold text-gray-900">ログイン</h1>
-
-      <input
-        type="email"
-        placeholder="メールアドレス"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="rounded-lg border border-gray-300 px-4 py-3 text-base"
-      />
-      <input
-        type="password"
-        placeholder="パスワード（6文字以上）"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="rounded-lg border border-gray-300 px-4 py-3 text-base"
-      />
-
-      <button
-        onClick={handleSignIn}
-        disabled={loading}
-        className="rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white disabled:opacity-50"
-      >
-        ログイン
-      </button>
-      <button
-        onClick={handleSignUp}
-        disabled={loading}
-        className="rounded-lg border border-blue-600 px-4 py-3 font-semibold text-blue-600 disabled:opacity-50"
-      >
-        新規登録
-      </button>
-
-      {message && (
-        <p className="rounded-lg bg-gray-100 px-4 py-3 text-center text-sm text-gray-700">
-          {message}
+    <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 p-6 text-center">
+      <div className="w-full rounded-2xl bg-white px-6 py-8 shadow-md">
+        <h1 className="text-2xl font-bold text-gray-900">Threads AI Auto Poster</h1>
+        <p className="mt-2 text-sm text-gray-600">
+          AIでThreadsの投稿文を生成・予約・自動投稿するツール
         </p>
-      )}
 
-      {loggedIn && (
-        <Link
-          href="/"
-          className="rounded-lg bg-green-600 px-4 py-3 text-center font-semibold text-white"
-        >
-          トップページへ進む →
-        </Link>
-      )}
-    </main>
-  );
-}
+        <div className="mt-6 rounded-lg bg-gray-100 px-4 py-3 text-sm">
+          {loading ? (
+            <p className="text-gray-500">確認中...</p>
+          ) : email ? (
+            <p className="text-gray-700">
+              ログイン中：<span className="font-semibold">{email}</span>
+            </p>
+          ) : (
+            <p className="text-gray-700">ログインしていません</p>
+          )}
+        </div>
+
+        {!loading &&
+          (email ? (
+            <button
+              onClick={
