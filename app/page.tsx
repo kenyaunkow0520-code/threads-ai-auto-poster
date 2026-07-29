@@ -54,7 +54,7 @@ export default function Page() {
               className="mt-4 block w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white"
             >
               ログインする
-            </Link>
+            <a>　
           ))}
       </div>
 
