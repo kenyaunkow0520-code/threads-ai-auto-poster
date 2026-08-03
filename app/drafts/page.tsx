@@ -15,7 +15,6 @@ export default function DraftsPage() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // 下書き一覧を読み込む
   async function loadDrafts() {
     const { data, error } = await supabase
       .from('drafts')
@@ -28,17 +27,13 @@ export default function DraftsPage() {
     }
   }
 
-  // ページを開いたときに一覧を読み込む
   useEffect(() => {
     loadDrafts();
   }, []);
 
-  // 下書きを保存する
   async function saveDraft() {
     setLoading(true);
     setMessage('');
-
-    // ログイン中のユーザーを取得
     const { data: userData } = await supabase.auth.getUser();
     const user = userData.user;
     if (!user) {
@@ -46,20 +41,31 @@ export default function DraftsPage() {
       setLoading(false);
       return;
     }
-
-    // drafts テーブルに保存
     const { error } = await supabase
       .from('drafts')
       .insert({ user_id: user.id, content });
-
     if (error) {
       setMessage('保存エラー: ' + error.message);
     } else {
       setMessage('保存しました！');
       setContent('');
-      loadDrafts(); // 一覧を更新
+      loadDrafts();
     }
     setLoading(false);
+  }
+
+  // 下書きを削除する
+  async function deleteDraft(id: string) {
+    const ok = window.confirm('この下書きを削除しますか？');
+    if (!ok) return;
+
+    const { error } = await supabase.from('drafts').delete().eq('id', id);
+    if (error) {
+      setMessage('削除エラー: ' + error.message);
+    } else {
+      setMessage('削除しました。');
+      loadDrafts();
+    }
   }
 
   return (
@@ -99,13 +105,4 @@ export default function DraftsPage() {
               className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800"
             >
               <p className="whitespace-pre-wrap">{d.content}</p>
-              <p className="mt-1 text-xs text-gray-400">
-                {new Date(d.created_at).toLocaleString('ja-JP')}
-              </p>
-            </li>
-          ))}
-        </ul>
-      )}
-    </main>
-  );
-}
+              <div className="mt-2 flex items-center
