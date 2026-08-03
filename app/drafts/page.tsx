@@ -77,6 +77,15 @@ export default function DraftsPage() {
         rows={4}
         className="rounded-lg border border-gray-300 px-4 py-3 text-base"
       />
+      <p
+        className={
+          content.length > 500
+            ? 'text-right text-xs text-red-500'
+            : 'text-right text-xs text-gray-400'
+        }
+      >
+        {content.length} / 500
+      </p>
 
       <button
         onClick={saveDraft}
