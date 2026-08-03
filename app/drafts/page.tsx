@@ -54,11 +54,9 @@ export default function DraftsPage() {
     setLoading(false);
   }
 
-  // 下書きを削除する
   async function deleteDraft(id: string) {
     const ok = window.confirm('この下書きを削除しますか？');
     if (!ok) return;
-
     const { error } = await supabase.from('drafts').delete().eq('id', id);
     if (error) {
       setMessage('削除エラー: ' + error.message);
@@ -105,4 +103,21 @@ export default function DraftsPage() {
               className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800"
             >
               <p className="whitespace-pre-wrap">{d.content}</p>
-              <div className="mt-2 flex items-center
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-xs text-gray-400">
+                  {new Date(d.created_at).toLocaleString('ja-JP')}
+                </span>
+                <button
+                  onClick={() => deleteDraft(d.id)}
+                  className="rounded-md border border-red-400 px-3 py-1 text-xs font-semibold text-red-500"
+                >
+                  削除
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </main>
+  );
+}
