@@ -35,7 +35,6 @@ export default function DraftsPage() {
   async function saveDraft() {
     setLoading(true);
     setMessage('');
-
     if (editingId) {
       const { error } = await supabase
         .from('drafts')
@@ -87,33 +86,33 @@ export default function DraftsPage() {
     }
   }
 
+  const over = content.length > 500;
+
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-6">
-      <h1 className="text-2xl font-bold text-gray-900">
+      <h1 className="mt-2 text-xl font-bold text-white">
         {editingId ? '下書きを編集' : '下書き'}
       </h1>
 
-      <textarea
-        placeholder="ここに下書きを入力..."
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        rows={4}
-        className="rounded-lg border border-gray-300 px-4 py-3 text-base"
-      />
-      <p
-        className={
-          content.length > 500
-            ? 'text-right text-xs text-red-500'
-            : 'text-right text-xs text-gray-400'
-        }
-      >
-        {content.length} / 500
-      </p>
+      <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4">
+        <textarea
+          placeholder="ここに下書きを入力..."
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          rows={5}
+          className="w-full resize-none bg-transparent text-base text-neutral-100 placeholder-neutral-600 outline-none"
+        />
+        <div className="mt-2 flex items-center justify-between">
+          <span className={over ? 'text-xs text-red-400' : 'text-xs text-neutral-500'}>
+            {content.length} / 500
+          </span>
+        </div>
+      </div>
 
       <button
         onClick={saveDraft}
         disabled={loading || content.trim() === ''}
-        className="rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white disabled:opacity-50"
+        className="rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-4 font-semibold text-white shadow-lg transition active:scale-[0.98] disabled:opacity-40"
       >
         {editingId ? '更新する' : '保存する'}
       </button>
@@ -121,43 +120,45 @@ export default function DraftsPage() {
       {editingId && (
         <button
           onClick={cancelEdit}
-          className="rounded-lg border border-gray-300 px-4 py-3 font-semibold text-gray-600"
+          className="rounded-2xl border border-neutral-700 px-5 py-3 font-medium text-neutral-300"
         >
           編集をやめる
         </button>
       )}
 
       {message && (
-        <p className="rounded-lg bg-gray-100 px-4 py-3 text-center text-sm text-gray-700">
+        <p className="rounded-2xl border border-neutral-800 bg-neutral-900 px-4 py-3 text-center text-sm text-neutral-300">
           {message}
         </p>
       )}
 
-      <h2 className="mt-4 text-lg font-semibold text-gray-800">保存した下書き</h2>
+      <h2 className="mt-4 text-sm font-semibold uppercase tracking-wider text-neutral-400">
+        保存した下書き
+      </h2>
       {drafts.length === 0 ? (
-        <p className="text-sm text-gray-500">まだ下書きがありません。</p>
+        <p className="text-sm text-neutral-500">まだ下書きがありません。</p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-3">
           {drafts.map((d) => (
             <li
               key={d.id}
-              className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800"
+              className="rounded-2xl border border-neutral-800 bg-neutral-900 px-4 py-3"
             >
-              <p className="whitespace-pre-wrap">{d.content}</p>
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-xs text-gray-400">
+              <p className="whitespace-pre-wrap text-sm text-neutral-100">{d.content}</p>
+              <div className="mt-3 flex items-center justify-between">
+                <span className="text-xs text-neutral-500">
                   {new Date(d.created_at).toLocaleString('ja-JP')}
                 </span>
                 <div className="flex gap-2">
                   <button
                     onClick={() => startEdit(d)}
-                    className="rounded-md border border-blue-400 px-3 py-1 text-xs font-semibold text-blue-500"
+                    className="rounded-lg border border-indigo-500/50 px-3 py-1 text-xs font-medium text-indigo-400 transition hover:bg-indigo-500/10"
                   >
                     編集
                   </button>
                   <button
                     onClick={() => deleteDraft(d.id)}
-                    className="rounded-md border border-red-400 px-3 py-1 text-xs font-semibold text-red-500"
+                    className="rounded-lg border border-red-500/50 px-3 py-1 text-xs font-medium text-red-400 transition hover:bg-red-500/10"
                   >
                     削除
                   </button>
