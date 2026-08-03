@@ -14,22 +14,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
-      <body className="min-h-screen bg-gray-50 text-gray-900 antialiased">
+      <body className="min-h-screen bg-neutral-950 text-neutral-100 antialiased">
         {/* ページ本体（下部ナビと重ならないよう下に余白） */}
         <div className="pb-20">{children}</div>
 
         {/* 画面下の固定ナビ */}
-        <nav className="fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white">
+        <nav className="fixed bottom-0 left-0 right-0 border-t border-neutral-800 bg-neutral-900/95 backdrop-blur">
           <div className="mx-auto flex max-w-md items-center justify-around">
             <Link
               href="/"
-              className="flex-1 py-3 text-center text-sm font-semibold text-gray-700"
+              className="flex-1 py-4 text-center text-sm font-medium text-neutral-300 transition hover:text-white"
             >
               🏠 ホーム
             </Link>
             <Link
               href="/drafts"
-              className="flex-1 py-3 text-center text-sm font-semibold text-gray-700"
+              className="flex-1 py-4 text-center text-sm font-medium text-neutral-300 transition hover:text-white"
             >
               ✏️ 下書き
             </Link>
