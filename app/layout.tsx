@@ -1,16 +1,10 @@
-import type { Metadata, Viewport } from 'next';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Threads AI Auto Poster',
   description: 'AIによるThreads投稿文の生成・予約投稿・完全自動投稿ツール',
-};
-
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
 };
 
 export default function RootLayout({
