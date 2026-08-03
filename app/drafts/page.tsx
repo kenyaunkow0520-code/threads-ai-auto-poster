@@ -14,7 +14,6 @@ export default function DraftsPage() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  // 編集中の下書きID（新規作成中はnull）
   const [editingId, setEditingId] = useState<string | null>(null);
 
   async function loadDrafts() {
@@ -33,20 +32,11 @@ export default function DraftsPage() {
     loadDrafts();
   }, []);
 
-  // 保存（新規）または更新（編集中）
   async function saveDraft() {
     setLoading(true);
     setMessage('');
-    const { data: userData } = await supabase.auth.getUser();
-    const user = userData.user;
-    if (!user) {
-      setMessage('ログインしていません。先にログインしてください。');
-      setLoading(false);
-      return;
-    }
 
     if (editingId) {
-      // 編集中 → 更新
       const { error } = await supabase
         .from('drafts')
         .update({ content })
@@ -60,10 +50,7 @@ export default function DraftsPage() {
         loadDrafts();
       }
     } else {
-      // 新規 → 保存
-      const { error } = await supabase
-        .from('drafts')
-        .insert({ user_id: user.id, content });
+      const { error } = await supabase.from('drafts').insert({ content });
       if (error) {
         setMessage('保存エラー: ' + error.message);
       } else {
@@ -75,7 +62,6 @@ export default function DraftsPage() {
     setLoading(false);
   }
 
-  // 編集を開始（入力欄に読み込む）
   function startEdit(d: Draft) {
     setEditingId(d.id);
     setContent(d.content);
@@ -83,7 +69,6 @@ export default function DraftsPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // 編集をやめる
   function cancelEdit() {
     setEditingId(null);
     setContent('');
