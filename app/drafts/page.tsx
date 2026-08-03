@@ -14,6 +14,8 @@ export default function DraftsPage() {
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  // 編集中の下書きID（新規作成中はnull）
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   async function loadDrafts() {
     const { data, error } = await supabase
@@ -31,6 +33,7 @@ export default function DraftsPage() {
     loadDrafts();
   }, []);
 
+  // 保存（新規）または更新（編集中）
   async function saveDraft() {
     setLoading(true);
     setMessage('');
@@ -41,17 +44,50 @@ export default function DraftsPage() {
       setLoading(false);
       return;
     }
-    const { error } = await supabase
-      .from('drafts')
-      .insert({ user_id: user.id, content });
-    if (error) {
-      setMessage('保存エラー: ' + error.message);
+
+    if (editingId) {
+      // 編集中 → 更新
+      const { error } = await supabase
+        .from('drafts')
+        .update({ content })
+        .eq('id', editingId);
+      if (error) {
+        setMessage('更新エラー: ' + error.message);
+      } else {
+        setMessage('更新しました！');
+        setContent('');
+        setEditingId(null);
+        loadDrafts();
+      }
     } else {
-      setMessage('保存しました！');
-      setContent('');
-      loadDrafts();
+      // 新規 → 保存
+      const { error } = await supabase
+        .from('drafts')
+        .insert({ user_id: user.id, content });
+      if (error) {
+        setMessage('保存エラー: ' + error.message);
+      } else {
+        setMessage('保存しました！');
+        setContent('');
+        loadDrafts();
+      }
     }
     setLoading(false);
+  }
+
+  // 編集を開始（入力欄に読み込む）
+  function startEdit(d: Draft) {
+    setEditingId(d.id);
+    setContent(d.content);
+    setMessage('編集モードです。直して「更新する」を押してください。');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // 編集をやめる
+  function cancelEdit() {
+    setEditingId(null);
+    setContent('');
+    setMessage('');
   }
 
   async function deleteDraft(id: string) {
@@ -68,7 +104,9 @@ export default function DraftsPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-6">
-      <h1 className="text-2xl font-bold text-gray-900">下書き</h1>
+      <h1 className="text-2xl font-bold text-gray-900">
+        {editingId ? '下書きを編集' : '下書き'}
+      </h1>
 
       <textarea
         placeholder="ここに下書きを入力..."
@@ -92,8 +130,17 @@ export default function DraftsPage() {
         disabled={loading || content.trim() === ''}
         className="rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white disabled:opacity-50"
       >
-        保存する
+        {editingId ? '更新する' : '保存する'}
       </button>
+
+      {editingId && (
+        <button
+          onClick={cancelEdit}
+          className="rounded-lg border border-gray-300 px-4 py-3 font-semibold text-gray-600"
+        >
+          編集をやめる
+        </button>
+      )}
 
       {message && (
         <p className="rounded-lg bg-gray-100 px-4 py-3 text-center text-sm text-gray-700">
@@ -116,12 +163,20 @@ export default function DraftsPage() {
                 <span className="text-xs text-gray-400">
                   {new Date(d.created_at).toLocaleString('ja-JP')}
                 </span>
-                <button
-                  onClick={() => deleteDraft(d.id)}
-                  className="rounded-md border border-red-400 px-3 py-1 text-xs font-semibold text-red-500"
-                >
-                  削除
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => startEdit(d)}
+                    className="rounded-md border border-blue-400 px-3 py-1 text-xs font-semibold text-blue-500"
+                  >
+                    編集
+                  </button>
+                  <button
+                    onClick={() => deleteDraft(d.id)}
+                    className="rounded-md border border-red-400 px-3 py-1 text-xs font-semibold text-red-500"
+                  >
+                    削除
+                  </button>
+                </div>
               </div>
             </li>
           ))}
