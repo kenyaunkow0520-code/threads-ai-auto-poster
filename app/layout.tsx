@@ -25,19 +25,13 @@ export default function RootLayout({
               href="/"
               className="flex-1 py-3 text-center text-sm font-semibold text-gray-700"
             >
-              ホーム
+              🏠 ホーム
             </Link>
             <Link
               href="/drafts"
               className="flex-1 py-3 text-center text-sm font-semibold text-gray-700"
             >
-              下書き
-            </Link>
-            <Link
-              href="/login"
-              className="flex-1 py-3 text-center text-sm font-semibold text-gray-700"
-            >
-              ログイン
+              ✏️ 下書き
             </Link>
           </div>
         </nav>
