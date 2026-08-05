@@ -21,19 +21,25 @@ export default function RootLayout({
           <div className="mx-auto flex max-w-md items-center justify-around">
             <Link
               href="/"
-              className="flex-1 py-4 text-center text-xs font-medium text-neutral-300 transition hover:text-white"
+              className="flex-1 py-3 text-center text-xs font-medium text-neutral-300 transition hover:text-white"
             >
               🏠<br />ホーム
             </Link>
             <Link
               href="/approve"
-              className="flex-1 py-4 text-center text-xs font-medium text-neutral-300 transition hover:text-white"
+              className="flex-1 py-3 text-center text-xs font-medium text-neutral-300 transition hover:text-white"
             >
-              ✅<br />承認待ち
+              ✅<br />承認
+            </Link>
+            <Link
+              href="/schedule"
+              className="flex-1 py-3 text-center text-xs font-medium text-neutral-300 transition hover:text-white"
+            >
+              🕒<br />予定
             </Link>
             <Link
               href="/drafts"
-              className="flex-1 py-4 text-center text-xs font-medium text-neutral-300 transition hover:text-white"
+              className="flex-1 py-3 text-center text-xs font-medium text-neutral-300 transition hover:text-white"
             >
               ✏️<br />下書き
             </Link>
