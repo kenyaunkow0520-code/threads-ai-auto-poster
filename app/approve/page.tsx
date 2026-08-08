@@ -42,7 +42,6 @@ export default function ApprovePage() {
     loadSlots();
   }, []);
 
-  // AIで10個生成する
   async function generate() {
     setGenerating(true);
     setMessage('AIが生成中です...少しお待ちください');
@@ -53,21 +52,17 @@ export default function ApprovePage() {
         body: JSON.stringify({ theme }),
       });
       const data = await res.json();
-
       if (!res.ok || data.error) {
         setMessage('生成エラー: ' + (data.error || '不明なエラー'));
         setGenerating(false);
         return;
       }
-
       const posts: string[] = data.posts ?? [];
       if (posts.length === 0) {
         setMessage('生成できませんでした。もう一度お試しください。');
         setGenerating(false);
         return;
       }
-
-      // 生成された10個を候補として保存
       const rows = posts.map((p) => ({ content: p }));
       const { error } = await supabase.from('post_candidates').insert(rows);
       if (error) {
@@ -80,6 +75,22 @@ export default function ApprovePage() {
       setMessage('通信エラー: ' + String(e));
     }
     setGenerating(false);
+  }
+
+  // 承認待ちを一括削除
+  async function clearAll() {
+    const ok = window.confirm('承認待ちの候補をすべて削除しますか？（この操作は戻せません）');
+    if (!ok) return;
+    const { error } = await supabase
+      .from('post_candidates')
+      .delete()
+      .eq('status', 'pending');
+    if (error) {
+      setMessage('一括削除エラー: ' + error.message);
+    } else {
+      setMessage('承認待ちをすべて削除しました。');
+      loadCandidates();
+    }
   }
 
   function setDay(id: string, day: string) {
@@ -99,7 +110,6 @@ export default function ApprovePage() {
     if (choice.day === 'tomorrow') base.setDate(base.getDate() + 1);
     const [h, m] = choice.time.split(':').map(Number);
     base.setHours(h, m, 0, 0);
-
     const { error } = await supabase
       .from('post_candidates')
       .update({ status: 'approved', scheduled_at: base.toISOString() })
@@ -151,9 +161,21 @@ export default function ApprovePage() {
         </p>
       )}
 
-      <h2 className="mt-2 text-sm font-semibold uppercase tracking-wider text-neutral-400">
-        承認待ちの候補（{candidates.length}）
-      </h2>
+      {/* 一覧の見出し＋一括削除 */}
+      <div className="mt-2 flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-neutral-400">
+          承認待ちの候補（{candidates.length}）
+        </h2>
+        {candidates.length > 0 && (
+          <button
+            onClick={clearAll}
+            className="rounded-lg border border-red-500/50 px-3 py-1 text-xs font-medium text-red-400"
+          >
+            すべて削除
+          </button>
+        )}
+      </div>
+
       {candidates.length === 0 ? (
         <p className="text-sm text-neutral-500">承認待ちの候補はありません。</p>
       ) : (
