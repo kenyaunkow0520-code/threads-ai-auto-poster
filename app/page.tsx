@@ -21,18 +21,28 @@ export default function Page() {
       {/* メニュー */}
       <div className="flex flex-col gap-3">
         <Link
-          href="/drafts"
+          href="/approve"
           className="rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-4 font-semibold text-white shadow-lg transition active:scale-[0.98]"
+        >
+          🤖 AIで投稿文を生成・承認
+        </Link>
+
+        <Link
+          href="/schedule"
+          className="rounded-2xl border border-neutral-700 bg-neutral-900 px-5 py-4 font-semibold text-neutral-200 transition active:scale-[0.98]"
+        >
+          🕒 投稿予定を見る
+        </Link>
+
+        <Link
+          href="/drafts"
+          className="rounded-2xl border border-neutral-700 bg-neutral-900 px-5 py-4 font-semibold text-neutral-200 transition active:scale-[0.98]"
         >
           ✏️ 下書きを書く
         </Link>
 
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-900 px-5 py-4 text-sm text-neutral-500">
-          🤖 AIで投稿文を生成（準備中）
-        </div>
-
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-900 px-5 py-4 text-sm text-neutral-500">
-          📤 Threadsへ投稿（準備中）
+        <div className="rounded-2xl border border-dashed border-neutral-700 px-5 py-4 text-center text-sm text-neutral-500">
+          📤 Threadsへ自動投稿（準備中）
         </div>
       </div>
 
@@ -42,10 +52,10 @@ export default function Page() {
           開発の進み具合
         </p>
         <ul className="mt-3 space-y-2 text-sm text-neutral-300">
-          <li>✅ 下書きの保存・編集・削除</li>
-          <li>✅ 画面ナビゲーション</li>
-          <li>✅ Vercelで公開</li>
-          <li className="text-neutral-500">🔜 AI文章生成・Threads連携</li>
+          <li>✅ AIで投稿文を生成</li>
+          <li>✅ 承認・時間割り振り</li>
+          <li>✅ 自動実行（時間が来たら処理）</li>
+          <li className="text-neutral-500">🔜 Threadsへ実際に投稿</li>
         </ul>
       </div>
     </main>
