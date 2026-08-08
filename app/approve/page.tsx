@@ -13,11 +13,11 @@ type Candidate = {
 type Slot = { id: string; slot_time: string };
 
 export default function ApprovePage() {
-  const [content, setContent] = useState('');
+  const [theme, setTheme] = useState('');
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [message, setMessage] = useState('');
-  // 各候補ごとの選択状態（日付と時間）
+  const [generating, setGenerating] = useState(false);
   const [choices, setChoices] = useState<Record<string, { day: string; time: string }>>({});
 
   async function loadCandidates() {
@@ -42,39 +42,61 @@ export default function ApprovePage() {
     loadSlots();
   }, []);
 
-  async function addCandidate() {
-    if (content.trim() === '') return;
-    const { error } = await supabase.from('post_candidates').insert({ content });
-    if (error) {
-      setMessage('追加エラー: ' + error.message);
-    } else {
-      setContent('');
-      loadCandidates();
+  // AIで10個生成する
+  async function generate() {
+    setGenerating(true);
+    setMessage('AIが生成中です...少しお待ちください');
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        setMessage('生成エラー: ' + (data.error || '不明なエラー'));
+        setGenerating(false);
+        return;
+      }
+
+      const posts: string[] = data.posts ?? [];
+      if (posts.length === 0) {
+        setMessage('生成できませんでした。もう一度お試しください。');
+        setGenerating(false);
+        return;
+      }
+
+      // 生成された10個を候補として保存
+      const rows = posts.map((p) => ({ content: p }));
+      const { error } = await supabase.from('post_candidates').insert(rows);
+      if (error) {
+        setMessage('保存エラー: ' + error.message);
+      } else {
+        setMessage(`${posts.length}個の候補を生成しました！`);
+        loadCandidates();
+      }
+    } catch (e) {
+      setMessage('通信エラー: ' + String(e));
     }
+    setGenerating(false);
   }
 
-  // 候補の「日付」を選ぶ
   function setDay(id: string, day: string) {
     setChoices((prev) => ({ ...prev, [id]: { ...prev[id], day } }));
   }
-  // 候補の「時間」を選ぶ
   function setTime(id: string, time: string) {
     setChoices((prev) => ({ ...prev, [id]: { ...prev[id], time } }));
   }
 
-  // 承認する（選んだ日付＋時間で投稿予定をセット）
   async function approve(id: string) {
     const choice = choices[id];
     if (!choice || !choice.day || !choice.time) {
       setMessage('先に「今日/明日」と「時間」を選んでください。');
       return;
     }
-
-    // 予定日時を組み立てる（日本時間で）
     const base = new Date();
-    if (choice.day === 'tomorrow') {
-      base.setDate(base.getDate() + 1);
-    }
+    if (choice.day === 'tomorrow') base.setDate(base.getDate() + 1);
     const [h, m] = choice.time.split(':').map(Number);
     base.setHours(h, m, 0, 0);
 
@@ -82,13 +104,10 @@ export default function ApprovePage() {
       .from('post_candidates')
       .update({ status: 'approved', scheduled_at: base.toISOString() })
       .eq('id', id);
-
     if (error) {
       setMessage('承認エラー: ' + error.message);
     } else {
-      setMessage(
-        `承認しました（${choice.day === 'today' ? '今日' : '明日'} ${choice.time}）`
-      );
+      setMessage(`承認しました（${choice.day === 'today' ? '今日' : '明日'} ${choice.time}）`);
       loadCandidates();
     }
   }
@@ -108,20 +127,21 @@ export default function ApprovePage() {
     <main className="mx-auto flex min-h-screen max-w-md flex-col gap-4 p-6">
       <h1 className="mt-2 text-xl font-bold text-white">承認待ち</h1>
 
-      {/* テスト用：手動で候補追加 */}
+      {/* AI生成エリア */}
       <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4">
-        <textarea
-          placeholder="テスト用：候補を手入力..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={2}
-          className="w-full resize-none bg-transparent text-base text-neutral-100 placeholder-neutral-600 outline-none"
+        <input
+          type="text"
+          placeholder="テーマ（空欄でおまかせ）例：副業、育児、節約"
+          value={theme}
+          onChange={(e) => setTheme(e.target.value)}
+          className="w-full rounded-lg bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder-neutral-500 outline-none"
         />
         <button
-          onClick={addCandidate}
-          className="mt-2 w-full rounded-xl border border-neutral-700 px-4 py-2 text-sm font-medium text-neutral-300"
+          onClick={generate}
+          disabled={generating}
+          className="mt-3 w-full rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50"
         >
-          候補に追加
+          {generating ? '生成中...' : '🤖 AIで10個生成'}
         </button>
       </div>
 
@@ -141,70 +161,46 @@ export default function ApprovePage() {
           {candidates.map((c) => {
             const choice = choices[c.id] || { day: '', time: '' };
             return (
-              <li
-                key={c.id}
-                className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4"
-              >
-                <p className="whitespace-pre-wrap text-sm text-neutral-100">
-                  {c.content}
-                </p>
+              <li key={c.id} className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4">
+                <p className="whitespace-pre-wrap text-sm text-neutral-100">{c.content}</p>
                 <p className="mt-1 text-xs text-neutral-500">{c.content.length} 文字</p>
 
-                {/* 日付選択 */}
                 <div className="mt-3 flex gap-2">
                   <button
                     onClick={() => setDay(c.id, 'today')}
-                    className={
-                      choice.day === 'today'
-                        ? 'flex-1 rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white'
-                        : 'flex-1 rounded-xl border border-neutral-700 px-3 py-2 text-sm text-neutral-300'
-                    }
-                  >
-                    今日
-                  </button>
+                    className={choice.day === 'today'
+                      ? 'flex-1 rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white'
+                      : 'flex-1 rounded-xl border border-neutral-700 px-3 py-2 text-sm text-neutral-300'}
+                  >今日</button>
                   <button
                     onClick={() => setDay(c.id, 'tomorrow')}
-                    className={
-                      choice.day === 'tomorrow'
-                        ? 'flex-1 rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white'
-                        : 'flex-1 rounded-xl border border-neutral-700 px-3 py-2 text-sm text-neutral-300'
-                    }
-                  >
-                    明日
-                  </button>
+                    className={choice.day === 'tomorrow'
+                      ? 'flex-1 rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white'
+                      : 'flex-1 rounded-xl border border-neutral-700 px-3 py-2 text-sm text-neutral-300'}
+                  >明日</button>
                 </div>
 
-                {/* 時間選択 */}
                 <div className="mt-2 flex flex-wrap gap-2">
                   {slots.map((s) => (
                     <button
                       key={s.id}
                       onClick={() => setTime(c.id, s.slot_time)}
-                      className={
-                        choice.time === s.slot_time
-                          ? 'rounded-lg bg-purple-600 px-3 py-1 text-sm font-semibold text-white'
-                          : 'rounded-lg border border-neutral-700 px-3 py-1 text-sm text-neutral-300'
-                      }
-                    >
-                      {s.slot_time}
-                    </button>
+                      className={choice.time === s.slot_time
+                        ? 'rounded-lg bg-purple-600 px-3 py-1 text-sm font-semibold text-white'
+                        : 'rounded-lg border border-neutral-700 px-3 py-1 text-sm text-neutral-300'}
+                    >{s.slot_time}</button>
                   ))}
                 </div>
 
-                {/* 承認・却下 */}
                 <div className="mt-3 flex gap-2">
                   <button
                     onClick={() => approve(c.id)}
                     className="flex-1 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-2 text-sm font-semibold text-white"
-                  >
-                    この設定で承認
-                  </button>
+                  >この設定で承認</button>
                   <button
                     onClick={() => reject(c.id)}
                     className="rounded-xl border border-red-500/50 px-4 py-2 text-sm font-medium text-red-400"
-                  >
-                    却下
-                  </button>
+                  >却下</button>
                 </div>
               </li>
             );
